@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#050b1e"><title>MDA Universe</title><link rel="stylesheet" href="style.css"></head><body>
+<form id="authForm" class="hidden"><input id="username"><input id="email" type="text" required><input id="password" type="password" required><button id="authSubmit">x</button></form>
+<section id="authView" class="mda-auth">
+<header class="mda-top"><img src="logo.png" class="logo-sm" alt="MDA Universe"><button id="topSignup" class="ghost">Daftar Sekarang</button></header>
+<div class="mda-body">
+<div class="mda-hero"><h1>Selamat Datang di<br><span>MDA Universe!</span></h1><p class="sub">Jelajahi dunia tanpa batas,<br>bersama komunitas terbaik!</p><div class="chips"><span><b>Akses Cepat</b><small>Tanpa Batas</small></span><span><b>Keamanan Terjamin</b><small>Data Anda Aman</small></span><span><b>Komunitas Aktif</b><small>Selalu Ramai</small></span></div></div>
+<form id="loginForm" class="panel glow"><img src="logo.png" class="logo-md" alt=""><h3>Login ke Akun Anda</h3><p class="muted">Masuk untuk melanjutkan perjalananmu</p><input id="liEmail" type="text" required placeholder="Email" autocomplete="email"><input id="liPass" type="password" required placeholder="Password" autocomplete="current-password"><button class="primary full">Login Sekarang →</button></form>
+<form id="signupForm" class="panel glow"><h3>Buat Akun Baru</h3><p class="muted">Bergabunglah dengan MDA Universe dan nikmati semua fiturnya</p><input id="suUser" required maxlength="24" placeholder="Username" autocomplete="username"><input id="suEmail" type="email" required placeholder="Email" autocomplete="email"><input id="suPass" type="password" required minlength="6" placeholder="Password (min. 6 karakter)" autocomplete="new-password"><input id="suPass2" type="password" required placeholder="Konfirmasi Password" autocomplete="new-password"><label class="check"><input type="checkbox" required> Saya setuju dengan Syarat &amp; Ketentuan</label><button class="primary full">Daftar Sekarang →</button></form>
+</div>
+<p id="authMessage" class="message auth-msg"></p>
+<footer class="mda-foot">© 2026 MDA Universe. All rights reserved. | Made with ♥ for the community</footer>
+</section>
+<section id="appView" class="mda-app hidden">
+<aside class="side"><img src="logo.png" class="logo-md" alt="MDA Universe"><button class="nav active" data-page="home">⌂ <span>Beranda</span></button><button class="nav" data-page="soon">▣ <span>Storage</span></button><button class="nav" data-page="soon">✎ <span>Studio</span></button><button class="nav" data-page="music">♫ <span>Music</span></button><button class="nav" data-page="friends">♧ <span>Community</span></button><button class="nav" data-page="chat">✉ <span>Chat</span></button><button class="nav" data-page="games">✦ <span>Games</span></button><button class="nav" data-page="soon">⚑ <span>Join Grup</span></button><button class="nav" data-page="soon">❝ <span>Cerita</span></button><button class="nav" data-page="profile">⚙ <span>Pengaturan</span></button><button id="logoutBtn" class="nav-out hidden">⎋ Keluar</button><div class="side-note">MDA Universe<small>Simpan • Bagikan • Ceritakan</small></div></aside>
+<div class="main"><div class="app-top"><input id="topSearch" class="top-search" placeholder="Cari teman di MDA..."><div class="user-mini"><div id="avatar" class="avatar">M</div><div><b id="myName">Pemain</b><small id="myEmail"></small></div></div><span id="connection" class="muted conn"></span></div>
+<div class="content">
+<div id="page-home" class="page"><div class="banner"><h2>Selamat Datang di<br><span class="accent">MDA Universe!</span></h2><p>Halo, <b id="welcomeName">Pemain</b>. Tempat terbaik untuk menyimpan, berbagi, dan mengekspresikan diri.</p><button class="primary" data-go="games">Jelajahi Fitur →</button></div>
+<div class="home-grid"><div class="panel feat"><div class="big">▣</div><h3>MDA Storage</h3><p class="muted">Simpan file pilihanmu.</p><button class="secondary" data-go="soon">Buka Storage →</button></div><div class="panel feat"><div class="big">✎</div><h3>MDA Studio</h3><p class="muted">Edit foto dengan filter.</p><button class="secondary" data-go="soon">Buka Studio →</button></div><div class="panel feat"><div class="big">♫</div><h3>MDA Music</h3><p class="muted">Dengarkan musik dari perangkatmu.</p><button class="secondary" data-go="music">Buka Music →</button></div><div class="panel feat"><div class="big">♧</div><h3>MDA Community</h3><p class="muted">Bergabung dan temukan teman baru.</p><button class="secondary" data-go="friends">Lihat Member →</button></div>
+<div class="panel"><div class="section-head"><h3>Teman</h3><small id="friendCount">0 teman</small></div><div id="statusList" class="result-list"></div></div>
+<div class="panel"><h3>Game Ringan</h3><p class="muted">Puzzle, balapan, tebak angka, tic-tac-toe, dan memori.</p><button class="primary" data-go="games">Main Sekarang →</button></div>
+<div class="panel"><h3>Chat</h3><p class="muted">Ngobrol langsung dengan teman.</p><button class="secondary" data-go="chat">Buka Chat →</button></div>
+<div class="panel"><h3>Cerita Terbaru</h3><p class="muted">Belum ada cerita. Jadilah yang pertama berbagi.</p><button class="secondary" data-go="soon">Baca Cerita →</button></div>
+<div class="panel"><h3>Grup &amp; Saluran</h3><p class="muted">Gabung ke komunitas kami.</p><button class="secondary" data-go="soon">Join Sekarang →</button></div>
+<div class="panel quote">"Bersama MDA, kita bisa lebih dekat, lebih berbagi, dan lebih bercerita."</div>
+</div>
+<div class="panel"><div class="section-head"><div><p class="eyebrow">DISCOVER</p><h3>Cari pemain</h3></div></div><div class="search-line"><input id="discoverSearch" placeholder="Cari username..."><button id="discoverBtn" class="primary">Cari</button></div><div id="discoverResults" class="result-list"></div></div>
+</div>
+<div id="page-friends" class="page hidden">
+          <div class="page-heading"><p class="eyebrow">YOUR CIRCLE</p><h2>Teman</h2><p class="muted">Kelola permintaan dan daftar temanmu.</p></div>
+          <div class="grid two"><div class="panel"><h3>Permintaan masuk</h3><div id="incoming" class="result-list"></div></div><div class="panel"><h3>Daftar teman</h3><div id="friendsList" class="result-list"></div></div></div>
+        </div>
+
+        <div id="page-chat" class="page hidden">
+          <div class="page-heading"><p class="eyebrow">MESSAGES</p><h2>Chat</h2><p class="muted">Pilih teman untuk mulai ngobrol.</p></div>
+          <div class="chat-layout panel"><div id="chatFriends" class="chat-friends"></div><div class="chat-main"><div id="chatTitle" class="chat-title">Pilih teman di sebelah kiri</div><div id="messages" class="messages"></div><form id="sendForm" class="send-line"><input id="chatInput" placeholder="Tulis pesan..." disabled><button class="primary" disabled id="sendBtn">Kirim</button></form></div></div>
+        </div>
+
+        <div id="page-games" class="page hidden">
+          <div class="page-heading"><p class="eyebrow">PLAY ZONE</p><h2>Mini Games</h2><p class="muted">Game ringan yang bisa dimainkan langsung.</p></div>
+          <div class="grid two">
+            <div class="panel game-card"><div class="game-icon">▦</div><h3>Puzzle 3×3</h3><p class="muted">Susun angka dari 1 sampai 8.</p><div id="puzzle" class="puzzle"></div><div class="game-controls"><button id="shufflePuzzle" class="primary">Acak ulang</button><span id="puzzleStatus" class="muted">Langkah: 0</span></div></div>
+            <div class="panel game-card"><div class="game-icon">🏁</div><h3>Tap Race</h3><p class="muted">Balapan ketuk tombol selama 10 detik.</p><div class="race-track"><div id="raceCar">🚗</div></div><h2 id="raceScore">0</h2><button id="raceStart" class="primary">Mulai balapan</button><p id="raceStatus" class="muted">Tekan mulai, lalu ketuk GAS secepat mungkin.</p><button id="raceTap" class="secondary" disabled>GAS!</button></div>
+          <div class="panel game-card"><div class="game-icon">?</div><h3>Tebak Angka</h3><p class="muted">Tebak angka 1 sampai 100.</p><div class="search-line"><input id="guessIn" type="number" min="1" max="100"><button id="guessBtn" class="primary">Tebak</button></div><p id="guessStatus" class="muted">Mulai tebak!</p></div>
+<div class="panel game-card"><div class="game-icon">X</div><h3>Tic-Tac-Toe</h3><div id="ttt" class="ttt"></div><p id="tttStatus" class="muted">Kamu X, giliranmu.</p><button id="tttReset" class="secondary">Ulang</button></div>
+<div class="panel game-card"><div class="game-icon">♥</div><h3>Memori</h3><div id="mem" class="ttt mem"></div><p id="memStatus" class="muted"></p><button id="memReset" class="secondary">Ulang</button></div>
+          </div>
+          <p class="tiny">Game saat ini berjalan lokal/offline. Multiplayer game akan memerlukan fitur room dan sinkronisasi tambahan.</p>
+        </div>
+
+        <div id="page-music" class="page hidden">
+          <div class="page-heading"><p class="eyebrow">MDA MUSIC</p><h2>Musik</h2><p class="muted">Pilih file lagu dari HP, lalu putar.</p></div>
+          <div class="panel audio-box"><input id="musicFiles" type="file" accept="audio/*" multiple><audio id="player" controls></audio><div id="playlist" class="result-list"></div></div>
+        </div>
+
+        <div id="page-profile" class="page hidden">
+          <div class="page-heading"><p class="eyebrow">IDENTITY</p><h2>Profil</h2><p class="muted">Atur informasi yang terlihat oleh pemain lain.</p></div>
+          <div class="panel profile-form"><div class="profile-avatar" id="profileAvatar">M</div><label>Username</label><input id="profileUsername" maxlength="24"><label>Bio</label><textarea id="profileBio" maxlength="160" placeholder="Ceritakan sedikit tentang dirimu..."></textarea><button id="saveProfile" class="primary">Simpan profil</button><p id="profileMessage" class="message"></p></div>
+        </div>
+      
+<div id="page-soon" class="page hidden"><div class="panel"><h2>Segera Hadir</h2><p class="muted">Fitur ini sedang disiapkan.</p></div></div>
+</div></div></section>
+<script type="module" src="app.js"></script></body></html>
