@@ -68,7 +68,7 @@ async function loadFriends(){
   $("incoming").querySelectorAll(".accept").forEach(b=>b.onclick=()=>acceptFriend(b.dataset.id));
   renderChatFriends();
 }
-function personHTML(p,sub,action=""){return `<div class="person"><div class="avatar">${escapeHTML(initials(p.username))}</div><div class="person-info"><b>${escapeHTML(p.username)}</b><small>${escapeHTML(sub)}</small></div>${action}</div>`;}
+function personHTML(p,sub,action=""){return `<div class="person"><div class="avatar">${escapeHTML(initials(p.username))}</div><div class="person-info"><b>${escapeHTML(p.username)}</b><small class="${sub==="Teman"?(onlineIds.has(p.id)?"on":"off"):""}">${escapeHTML(sub==="Teman"?(onlineIds.has(p.id)?"Online":"Offline"):sub)}</small></div>${action}</div>`;}
 async function acceptFriend(id){const {error}=await supabase.from("friendships").update({status:"accepted"}).eq("requester",id).eq("addressee",currentUser.id);if(error)alert(error.message);else loadFriends();}
 $("discoverBtn").onclick=async()=>{
   const q=$("discoverSearch").value.trim();if(!q)return;
@@ -94,9 +94,9 @@ async function loadMessages(){
   const {data,error}=await supabase.from("messages").select("*").or(`and(sender_id.eq.${a},receiver_id.eq.${b}),and(sender_id.eq.${b},receiver_id.eq.${a})`).order("created_at",{ascending:true}).limit(100);
   if(error){$("messages").textContent=error.message;return;}(data||[]).forEach(appendMessage);
 }
-function appendMessage(m){if(document.querySelector(`[data-message="${m.id}"]`))return;const div=document.createElement("div");div.className="bubble"+(m.sender_id===currentUser.id?" mine":"");div.dataset.message=m.id;div.textContent=m.body;const small=document.createElement("small");small.textContent=new Date(m.created_at).toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});div.appendChild(small);$("messages").appendChild(div);$("messages").scrollTop=$("messages").scrollHeight;}
+function appendMessage(m){if(document.querySelector(`[data-message="${m.id}"]`))return;const div=document.createElement("div");div.className="bubble"+(m.sender_id===currentUser.id?" mine":"");div.dataset.message=m.id;const stk=!m.file_path&&m.body.startsWith("[s]");div.textContent=m.file_path?"":(stk?m.body.slice(3):m.body);if(stk)div.classList.add("sticker");if(m.file_path)renderFile(div,m);const small=document.createElement("small");small.textContent=new Date(m.created_at).toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});div.appendChild(small);$("messages").appendChild(div);$("messages").scrollTop=$("messages").scrollHeight;}
 $("sendForm").onsubmit=async e=>{e.preventDefault();const body=$("chatInput").value.trim();if(!body||!activeFriend)return;const {error}=await supabase.from("messages").insert({sender_id:currentUser.id,receiver_id:activeFriend,body});if(error)alert(error.message);else $("chatInput").value="";};
-function startPresence(){if(!supabase)return;presenceChannel=supabase.channel("online-users",{config:{presence:{key:currentUser.id}}});presenceChannel.on("presence",{event:"sync"},()=>{}).subscribe(async status=>{if(status==="SUBSCRIBED")await presenceChannel.track({username:profile.username,online_at:new Date().toISOString()});});window.addEventListener("beforeunload",()=>presenceChannel?.untrack());}
+function startPresence(){if(!supabase)return;presenceChannel=supabase.channel("online-users",{config:{presence:{key:currentUser.id}}});presenceChannel.on("presence",{event:"sync"},()=>{onlineIds=new Set(Object.keys(presenceChannel.presenceState()));renderChatFriends();}).subscribe(async status=>{if(status==="SUBSCRIBED")await presenceChannel.track({username:profile.username,online_at:new Date().toISOString()});});window.addEventListener("beforeunload",()=>presenceChannel?.untrack());}
 
 // Offline puzzle
 let tiles=[1,2,3,4,5,6,7,8,0],steps=0;
@@ -136,3 +136,42 @@ function mset(){const s=["★","♥","♪","☀","☾","✿"];mc=[...s,...s].sor
 function mdraw(){$("mem").innerHTML=mc.map((v,i)=>`<button data-i="${i}">${mf.includes(i)||mo.includes(i)?v:""}</button>`).join("");$("mem").querySelectorAll("button").forEach(b=>b.onclick=()=>mflip(+b.dataset.i));}
 function mflip(i){if(mo.length===2||mo.includes(i)||mf.includes(i))return;mo.push(i);mdraw();if(mo.length===2){mm++;if(mc[mo[0]]===mc[mo[1]]){mf.push(...mo);mo=[];mdraw();if(mf.length===12)$("memStatus").textContent=`Selesai dalam ${mm} langkah!`;}else setTimeout(()=>{mo=[];mdraw();},700);}}
 $("memReset").onclick=mset;mset();
+
+async function renderFile(div,m){
+ const {data}=await supabase.storage.from("chat-files").createSignedUrl(m.file_path,3600);const url=data?.signedUrl;
+ if(!url){div.prepend(m.body);return;}
+ const t=m.file_type||"",box=document.createElement("div"),media=/^(image|video|audio)\//.test(t);
+ if(t.startsWith("image/")){const i=document.createElement("img");i.src=url;i.className="chat-img";box.appendChild(i);}
+ else if(t.startsWith("video/")){const v=document.createElement("video");v.src=url;v.controls=true;v.className="chat-img";box.appendChild(v);}
+ else if(t.startsWith("audio/")){const a=document.createElement("audio");a.src=url;a.controls=true;box.appendChild(a);}
+ const l=document.createElement("a");l.href=url;l.target="_blank";l.download=m.body;l.textContent=(media?"":"Unduh ")+m.body+" ("+Math.ceil((m.file_size||0)/1024)+" KB)";box.appendChild(l);
+ if(/\.apk$/i.test(m.body)){const w=document.createElement("small");w.textContent="Peringatan: buka file APK hanya jika pengirimnya dipercaya.";box.appendChild(w);}
+ div.prepend(box);
+}
+$("fileInput").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;if(!activeFriend){alert("Pilih teman dulu.");return;}if(f.size>30*1024*1024){alert("Ukuran maksimal 30 MB.");return;}
+ const old=$("chatTitle").textContent;$("chatTitle").textContent="Mengunggah "+f.name+"...";
+ const path=`${currentUser.id}/${Date.now()}-${f.name.replace(/[^\w.\-]/g,"_")}`;
+ const {error:ue}=await supabase.storage.from("chat-files").upload(path,f,{contentType:f.type||"application/octet-stream"});
+ if(ue){$("chatTitle").textContent=old;alert(ue.message);return;}
+ const {error}=await supabase.from("messages").insert({sender_id:currentUser.id,receiver_id:activeFriend,body:f.name.slice(0,200),file_path:path,file_type:f.type||"",file_size:f.size});
+ $("chatTitle").textContent=old;if(error)alert(error.message);};
+
+let onlineIds=new Set(),unread=0,inboxOn=false,emojiMode="",stId=null;
+const EMO=["😀","😂","😍","😎","😭","😡","👍","🙏","🔥","❤","🎉","🤔","😴","😅","🥰","😢","🙌","💯","✨","👀"];
+const STK=["😎","🥳","🤣","😍","😭","😡","🙈","🐱","🐶","🦊","🐼","🍕","🎮","⚽","🚀","🌙","⭐","💙","👻","🔥"];
+function beep(){try{const c=new (window.AudioContext||window.webkitAudioContext)(),o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);o.frequency.value=880;g.gain.value=.08;o.start();o.stop(c.currentTime+.15);}catch{}}
+function notify(m){const open=!$("page-chat").classList.contains("hidden")&&activeFriend===m.sender_id&&!document.hidden;if(open)return;unread++;beep();document.title="("+unread+") MDA Universe";const n=document.querySelector('.nav[data-page="chat"]');n.querySelector(".badge")?.remove();n.insertAdjacentHTML("beforeend",`<span class="badge">${unread}</span>`);try{if(Notification.permission==="granted")new Notification("Pesan baru",{body:m.file_path?"Mengirim file":m.body.startsWith("[s]")?"Stiker":m.body.slice(0,60)});}catch{}}
+document.querySelector('.nav[data-page="chat"]').addEventListener("click",()=>{unread=0;document.title="MDA Universe";document.querySelector('.nav[data-page="chat"] .badge')?.remove();});
+document.addEventListener("click",()=>{if("Notification" in window&&Notification.permission==="default")Notification.requestPermission();},{once:true});
+setInterval(()=>{if(!currentUser)return;$("myEmail").textContent="Online";$("myEmail").className="on";if(inboxOn||!supabase)return;inboxOn=true;supabase.channel("inbox").on("postgres_changes",{event:"INSERT",schema:"public",table:"messages",filter:"receiver_id=eq."+currentUser.id},p=>notify(p.new)).subscribe();},2000);
+function openBox(mode){const b=$("emojiBox");if(emojiMode===mode&&!b.classList.contains("hidden")){b.classList.add("hidden");return;}emojiMode=mode;b.innerHTML=(mode==="s"?STK:EMO).map(x=>`<button type="button">${x}</button>`).join("");b.querySelectorAll("button").forEach(el=>el.onclick=()=>pick(el.textContent));b.classList.remove("hidden");}
+async function pick(x){if(emojiMode==="s"){if(!activeFriend){alert("Pilih teman dulu.");return;}const {error}=await supabase.from("messages").insert({sender_id:currentUser.id,receiver_id:activeFriend,body:"[s]"+x});if(error)alert(error.message);$("emojiBox").classList.add("hidden");}else $("chatInput").value+=x;}
+$("emojiBtn").onclick=()=>openBox("e");$("stickerBtn").onclick=()=>openBox("s");
+async function loadStories(){const {data,error}=await supabase.from("stories").select("*,profiles(username)").order("updated_at",{ascending:false}).limit(50);if(error){$("stMsg").textContent=error.message;return;}const L=data||[];
+ const card=(s,mine)=>`<div class="story"><b>${escapeHTML(s.title)}</b>${mine?`<small> ${s.published?"Terbit":"Draft"}</small>`:`<small> oleh ${escapeHTML(s.profiles?.username||"teman")}</small>`}<p>${escapeHTML(s.body.slice(0,mine?80:400))}</p>${mine?`<button class="secondary" data-edit="${s.id}">Lanjutkan</button>`:""}</div>`;
+ $("stMine").innerHTML=L.filter(s=>s.author_id===currentUser.id).map(s=>card(s,1)).join("")||"<small>Belum ada cerita.</small>";
+ $("stAll").innerHTML=L.filter(s=>s.published).map(s=>card(s,0)).join("")||"<small>Belum ada cerita terbit.</small>";
+ document.querySelectorAll("[data-edit]").forEach(b=>b.onclick=()=>{const s=L.find(x=>x.id==b.dataset.edit);stId=s.id;$("stTitle").value=s.title;$("stBody").value=s.body;$("stMsg").textContent="Melanjutkan: "+s.title;scrollTo({top:0,behavior:"smooth"});});}
+async function saveStory(pub){const title=$("stTitle").value.trim();if(!title){$("stMsg").textContent="Judul wajib diisi.";return;}const row={title,body:$("stBody").value,published:pub,updated_at:new Date().toISOString()};const r=stId?await supabase.from("stories").update(row).eq("id",stId).select().single():await supabase.from("stories").insert({...row,author_id:currentUser.id}).select().single();if(r.error){$("stMsg").textContent=r.error.message;return;}stId=r.data.id;$("stMsg").textContent=pub?"Cerita dipublikasikan.":"Draft tersimpan.";loadStories();}
+$("stSave").onclick=()=>saveStory(false);$("stPub").onclick=()=>saveStory(true);$("stNew").onclick=()=>{stId=null;$("stTitle").value="";$("stBody").value="";$("stMsg").textContent="";};
+document.querySelector('.nav[data-page="story"]').addEventListener("click",loadStories);
