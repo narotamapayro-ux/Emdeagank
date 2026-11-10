@@ -31,3 +31,9 @@ body{background:radial-gradient(circle at 20% 10%,#12307a55,transparent 45%),rad
 .story{border-bottom:1px solid #1b3d8f;padding:10px 0}.story p{color:#cfe0ff;margin:6px 0;white-space:pre-wrap}textarea{width:100%;margin:6px 0}
 .game-card{background:linear-gradient(160deg,#0f2a6b,#0a1635);border:1px solid #2f7bff88;border-radius:18px;transition:transform .15s,box-shadow .15s}.game-card:hover{transform:translateY(-3px);box-shadow:0 0 26px #2f7bff66}
 .game-icon{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-size:1.7rem;color:#fff;background:linear-gradient(135deg,#3b8bff,#1c4fd8);box-shadow:0 0 18px #3b8bff88;margin-bottom:8px}.ttt button:hover{background:#17338a}
+
+.lyrics{max-height:260px;overflow-y:auto;position:relative;margin:10px 0;padding:10px;background:#07122c;border:1px solid #1b3d8f;border-radius:12px;text-align:center}.lyrics p{margin:8px 0;color:#7f8aa8;transition:.2s}.lyrics p.now{color:#fff;font-size:1.15rem;font-weight:700;text-shadow:0 0 12px #3b8bff}
+
+.pad{height:110px;border-radius:14px;background:#17338a;margin-top:8px;cursor:pointer}.pad.wait{background:#c62828}.pad.go{background:#2e7d32}.simon button{border:0;border-radius:12px;aspect-ratio:2/1}.hole button{font-size:1.6rem;color:#ffd54f}.qn{margin:8px 0;letter-spacing:.1em;text-align:center}
+.linkbtn{display:inline-block;padding:10px 16px;border-radius:12px;text-decoration:none;margin-top:8px;background:linear-gradient(90deg,#3b8bff,#1c4fd8);color:#fff;font-weight:600}
+.board-tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.lb{display:flex;justify-content:space-between;gap:10px;padding:10px 4px;border-bottom:1px solid #1b3d8f}.lb span{flex:1}.lb:nth-child(1) b:first-child{color:#ffd54f}

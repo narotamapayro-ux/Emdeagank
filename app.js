@@ -115,7 +115,7 @@ $("guessBtn").onclick=()=>{const g=+$("guessIn").value;if(!g)return;tries++;if(g
 const pl=[];let cur=-1;
 $("musicFiles").onchange=e=>{[...e.target.files].forEach(f=>pl.push({name:f.name,url:URL.createObjectURL(f)}));if(cur<0&&pl.length)play(0);else drawPl();};
 function drawPl(){$("playlist").innerHTML=pl.map((t,i)=>`<div class="person${i===cur?" selected":""}" data-i="${i}" style="cursor:pointer"><div class="avatar">♪</div><div class="person-info"><b>${escapeHTML(t.name)}</b></div></div>`).join("")||"<small>Belum ada lagu.</small>";$("playlist").querySelectorAll(".person").forEach(el=>el.onclick=()=>play(+el.dataset.i));}
-function play(i){cur=i;$("player").src=pl[i].url;$("player").play();drawPl();}
+function play(i){cur=i;$("player").src=pl[i].url;$("player").play();drawPl();loadLyrics(pl[i].name);}
 $("player").onended=()=>{if(cur+1<pl.length)play(cur+1);};
 drawPl();
 
@@ -134,7 +134,7 @@ $("tttReset").onclick=()=>{tb=Array(9).fill("");tend=false;$("tttStatus").textCo
 let mc=[],mf=[],mo=[],mm=0;
 function mset(){const s=["★","♥","♪","☀","☾","✿"];mc=[...s,...s].sort(()=>Math.random()-.5);mf=[];mo=[];mm=0;mdraw();$("memStatus").textContent="Cocokkan semua pasangan.";}
 function mdraw(){$("mem").innerHTML=mc.map((v,i)=>`<button data-i="${i}">${mf.includes(i)||mo.includes(i)?v:""}</button>`).join("");$("mem").querySelectorAll("button").forEach(b=>b.onclick=()=>mflip(+b.dataset.i));}
-function mflip(i){if(mo.length===2||mo.includes(i)||mf.includes(i))return;mo.push(i);mdraw();if(mo.length===2){mm++;if(mc[mo[0]]===mc[mo[1]]){mf.push(...mo);mo=[];mdraw();if(mf.length===12)$("memStatus").textContent=`Selesai dalam ${mm} langkah!`;}else setTimeout(()=>{mo=[];mdraw();},700);}}
+function mflip(i){if(mo.length===2||mo.includes(i)||mf.includes(i))return;mo.push(i);mdraw();if(mo.length===2){mm++;if(mc[mo[0]]===mc[mo[1]]){mf.push(...mo);mo=[];mdraw();if(mf.length===12){$("memStatus").textContent=`Selesai dalam ${mm} langkah!`;submitScore("memori",Math.round(600/mm));}}else setTimeout(()=>{mo=[];mdraw();},700);}}
 $("memReset").onclick=mset;mset();
 
 async function renderFile(div,m){
@@ -175,3 +175,53 @@ async function loadStories(){const {data,error}=await supabase.from("stories").s
 async function saveStory(pub){const title=$("stTitle").value.trim();if(!title){$("stMsg").textContent="Judul wajib diisi.";return;}const row={title,body:$("stBody").value,published:pub,updated_at:new Date().toISOString()};const r=stId?await supabase.from("stories").update(row).eq("id",stId).select().single():await supabase.from("stories").insert({...row,author_id:currentUser.id}).select().single();if(r.error){$("stMsg").textContent=r.error.message;return;}stId=r.data.id;$("stMsg").textContent=pub?"Cerita dipublikasikan.":"Draft tersimpan.";loadStories();}
 $("stSave").onclick=()=>saveStory(false);$("stPub").onclick=()=>saveStory(true);$("stNew").onclick=()=>{stId=null;$("stTitle").value="";$("stBody").value="";$("stMsg").textContent="";};
 document.querySelector('.nav[data-page="story"]').addEventListener("click",loadStories);
+
+let lrc=[],lrcIdx=-1;
+const cleanName=n=>n.replace(/\.[^.]+$/,"").replace(/_+/g," ").replace(/\(.*?\)|\[.*?\]/g,"").replace(/\s+/g," ").trim();
+async function loadLyrics(name){const box=$("lyrics");lrc=[];lrcIdx=-1;box.innerHTML="<small>Mencari lirik...</small>";
+ try{const r=await fetch("https://lrclib.net/api/search?q="+encodeURIComponent(cleanName(name)));const d=await r.json();const hit=d.find(x=>x.syncedLyrics)||d.find(x=>x.plainLyrics);
+  if(!hit){box.innerHTML="<small>Lirik tidak ditemukan. Coba ubah nama file jadi Judul - Artis.</small>";return;}
+  if(hit.syncedLyrics){lrc=hit.syncedLyrics.split("\n").map(l=>{const m=l.match(/^\[(\d+):(\d+(?:\.\d+)?)\](.*)$/);return m?{t:+m[1]*60+ +m[2],s:m[3].trim()}:null;}).filter(x=>x&&x.s);box.innerHTML=lrc.map(l=>`<p>${escapeHTML(l.s)}</p>`).join("");}
+  else box.innerHTML=hit.plainLyrics.split("\n").map(l=>`<p>${escapeHTML(l)}</p>`).join("");
+  box.insertAdjacentHTML("afterbegin",`<small>${escapeHTML(hit.artistName||"")} - ${escapeHTML(hit.trackName||"")}</small>`);
+ }catch{box.innerHTML="<small>Lirik tidak bisa dimuat. Cek koneksi internet.</small>";}}
+$("player").ontimeupdate=()=>{if(!lrc.length)return;const t=$("player").currentTime;let i=-1;for(let k=0;k<lrc.length;k++){if(lrc[k].t<=t)i=k;else break;}if(i===lrcIdx)return;lrcIdx=i;const box=$("lyrics"),ps=box.querySelectorAll("p");ps.forEach(p=>p.classList.remove("now"));const p=ps[i];if(p){p.classList.add("now");box.scrollTo({top:p.offsetTop-box.clientHeight/2,behavior:"smooth"});}};
+
+async function submitScore(game,score){if(!supabase||!currentUser||score<=0)return;const {data}=await supabase.from("scores").select("score").eq("user_id",currentUser.id).eq("game",game).maybeSingle();if(data&&data.score>=score)return;await supabase.from("scores").upsert({user_id:currentUser.id,game,score,updated_at:new Date().toISOString()});}
+const GAMES={reaksi:"Reaksi Kilat",bintang:"Pukul Bintang",hitung:"Hitung Cepat",pola:"Ulangi Pola",kata:"Kata Acak",memori:"Memori"};let boardGame="reaksi";
+async function loadBoard(){$("boardTabs").innerHTML=Object.entries(GAMES).map(([k,n])=>`<button class="${k===boardGame?"primary":"secondary"}" data-k="${k}">${n}</button>`).join("");$("boardTabs").querySelectorAll("button").forEach(b=>b.onclick=()=>{boardGame=b.dataset.k;loadBoard();});
+ const {data,error}=await supabase.from("scores").select("score,user_id,profiles(username)").eq("game",boardGame).order("score",{ascending:false}).limit(10);if(error){$("boardList").textContent=error.message;return;}
+ $("boardList").innerHTML=(data||[]).map((r,i)=>`<div class="lb"><b>#${i+1}</b><span>${escapeHTML(r.profiles?.username||"pemain")}${r.user_id===currentUser.id?" (kamu)":""}</span><b>${r.score}</b></div>`).join("")||"<small>Belum ada skor. Jadilah yang pertama!</small>";}
+document.querySelector('.nav[data-page="board"]').addEventListener("click",loadBoard);
+{
+const mg=document.createElement("div");mg.className="grid two";$("page-games").appendChild(mg);
+const qq=(d,s)=>d.querySelector(s);
+const card=(t,ic,body)=>{const d=document.createElement("div");d.className="panel game-card";d.innerHTML=`<div class="game-icon">${ic}</div><h3>${t}</h3><p class="muted s"></p>${body}`;mg.appendChild(d);return d;};
+const g1=card("Reaksi Kilat","⚡",`<button class="secondary b">Mulai</button><div class="pad"></div>`);qq(g1,".s").textContent="Tekan Mulai, tunggu layar hijau, lalu tap secepatnya.";
+let rt=0,rw=null;
+qq(g1,".b").onclick=()=>{const p=qq(g1,".pad");p.className="pad wait";qq(g1,".s").textContent="Tunggu hijau...";clearTimeout(rw);rw=setTimeout(()=>{p.className="pad go";rt=performance.now();},1000+Math.random()*3000);};
+qq(g1,".pad").onclick=()=>{const p=qq(g1,".pad"),s=qq(g1,".s");if(p.classList.contains("go")){const ms=Math.round(performance.now()-rt);p.className="pad";s.textContent=ms+" ms";submitScore("reaksi",Math.max(1,1000-ms));}else if(p.classList.contains("wait")){clearTimeout(rw);p.className="pad";s.textContent="Terlalu cepat! Ulangi.";}};
+const g2=card("Pukul Bintang","★",`<button class="secondary b">Mulai</button><div class="ttt hole"></div>`);qq(g2,".s").textContent="Tap bintang yang menyala. 20 detik.";
+let hit=0,hon=-1,ht=null,hl=0;
+function hdraw(){const h=qq(g2,".hole");h.innerHTML=Array.from({length:9},(_,i)=>`<button data-i="${i}">${i===hon?"★":""}</button>`).join("");h.querySelectorAll("button").forEach(b=>b.onclick=()=>{if(+b.dataset.i===hon){hit++;hnext();}});}
+function hnext(){hon=Math.floor(Math.random()*9);hdraw();}
+qq(g2,".b").onclick=()=>{hit=0;hl=20;hnext();clearInterval(ht);ht=setInterval(()=>{hl--;qq(g2,".s").textContent="Skor: "+hit+" | sisa "+hl+" dtk";if(hl<=0){clearInterval(ht);hon=-1;hdraw();qq(g2,".s").textContent="Selesai! Skor: "+hit;submitScore("bintang",hit);}},1000);};hdraw();
+const g3=card("Hitung Cepat","∑",`<h2 class="qn"></h2><div class="search-line"><input class="ans" type="number" placeholder="Jawaban, lalu Enter"><button class="secondary b">Mulai</button></div>`);qq(g3,".s").textContent="Jawab sebanyak mungkin dalam 30 detik.";
+let ca=0,cs=0,ct=null,cl=0,crun=false;
+function cq(){let a=1+Math.floor(Math.random()*12),b=1+Math.floor(Math.random()*12);const o=["+","-","×"][Math.floor(Math.random()*3)];if(o==="-"&&a<b)[a,b]=[b,a];cs=o==="+"?a+b:o==="-"?a-b:a*b;qq(g3,".qn").textContent=`${a} ${o} ${b} = ?`;}
+qq(g3,".b").onclick=()=>{ca=0;cl=30;crun=true;cq();qq(g3,".ans").focus();clearInterval(ct);ct=setInterval(()=>{cl--;qq(g3,".s").textContent="Benar: "+ca+" | sisa "+cl+" dtk";if(cl<=0){clearInterval(ct);crun=false;qq(g3,".qn").textContent="Selesai!";submitScore("hitung",ca);}},1000);};
+qq(g3,".ans").onkeydown=e=>{if(e.key==="Enter"&&crun){if(+e.target.value===cs)ca++;e.target.value="";cq();}};
+const g4=card("Ulangi Pola","◆",`<div class="ttt simon"></div><button class="secondary b">Mulai</button>`);qq(g4,".s").textContent="Hafalkan urutan warna, lalu ulangi.";
+const CL=["#e53935","#43a047","#1e88e5","#fdd835"];let seq=[],pi=0,lock=true;
+qq(g4,".simon").innerHTML=CL.map((c,i)=>`<button data-i="${i}" style="background:${c}"></button>`).join("");
+const flash=i=>new Promise(r=>{const b=qq(g4,`.simon [data-i="${i}"]`);b.style.opacity=.3;setTimeout(()=>{b.style.opacity=1;setTimeout(r,200);},400);});
+async function play4(){lock=true;pi=0;qq(g4,".s").textContent="Perhatikan...";for(const i of seq)await flash(i);lock=false;qq(g4,".s").textContent="Giliranmu";}
+qq(g4,".b").onclick=()=>{seq=[Math.floor(Math.random()*4)];play4();};
+qq(g4,".simon").querySelectorAll("button").forEach(b=>b.onclick=()=>{if(lock)return;if(+b.dataset.i!==seq[pi]){lock=true;qq(g4,".s").textContent="Salah! Level "+(seq.length-1);submitScore("pola",seq.length-1);return;}pi++;if(pi===seq.length){seq.push(Math.floor(Math.random()*4));setTimeout(play4,600);}});
+const WD=["KOMPUTER","SEKOLAH","MUSIK","CERITA","TEMAN","BINTANG","GALAKSI","PERMAINAN","KOMUNITAS","LAPTOP","INTERNET","PELANGI","SAMUDRA","BURUNG","KEMAH"];
+const g5=card("Kata Acak","Ab",`<h2 class="qn"></h2><div class="search-line"><input class="ans" placeholder="Jawaban, lalu Enter"><button class="secondary b">Mulai</button></div>`);qq(g5,".s").textContent="Susun huruf jadi kata. 60 detik.";
+let wk="",ws=0,wt=null,wl=0,wrun=false;
+function wnext(){wk=WD[Math.floor(Math.random()*WD.length)];let s;do{s=[...wk].sort(()=>Math.random()-.5).join("");}while(s===wk);qq(g5,".qn").textContent=s;}
+qq(g5,".b").onclick=()=>{ws=0;wl=60;wrun=true;wnext();clearInterval(wt);wt=setInterval(()=>{wl--;qq(g5,".s").textContent="Benar: "+ws+" | sisa "+wl+" dtk";if(wl<=0){clearInterval(wt);wrun=false;qq(g5,".qn").textContent="Selesai!";submitScore("kata",ws);}},1000);};
+qq(g5,".ans").onkeydown=e=>{if(e.key==="Enter"&&wrun){if(e.target.value.trim().toUpperCase()===wk){ws++;wnext();}e.target.value="";}};
+}

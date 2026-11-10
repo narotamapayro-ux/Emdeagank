@@ -12,7 +12,7 @@
 <footer class="mda-foot">© 2026 MDA Universe. All rights reserved. | Made with ♥ for the community</footer>
 </section>
 <section id="appView" class="mda-app hidden">
-<aside class="side"><img src="logo.png" class="logo-md" alt="MDA Universe"><button class="nav active" data-page="home">⌂ <span>Beranda</span></button><button class="nav" data-page="soon">▣ <span>Storage</span></button><button class="nav" data-page="soon">✎ <span>Studio</span></button><button class="nav" data-page="music">♫ <span>Music</span></button><button class="nav" data-page="friends">♧ <span>Community</span></button><button class="nav" data-page="chat">✉ <span>Chat</span></button><button class="nav" data-page="games">✦ <span>Games</span></button><button class="nav" data-page="soon">⚑ <span>Join Grup</span></button><button class="nav" data-page="story">❝ <span>Cerita</span></button><button class="nav" data-page="profile">⚙ <span>Pengaturan</span></button><button id="logoutBtn" class="nav-out hidden">⎋ Keluar</button><div class="side-note">MDA Universe<small>Simpan • Bagikan • Ceritakan</small></div></aside>
+<aside class="side"><img src="logo.png" class="logo-md" alt="MDA Universe"><button class="nav active" data-page="home">⌂ <span>Beranda</span></button><button class="nav" data-page="soon">▣ <span>Storage</span></button><button class="nav" data-page="soon">✎ <span>Studio</span></button><button class="nav" data-page="music">♫ <span>Music</span></button><button class="nav" data-page="friends">♧ <span>Community</span></button><button class="nav" data-page="chat">✉ <span>Chat</span></button><button class="nav" data-page="games">✦ <span>Games</span></button><button class="nav" data-page="board">▲ <span>Papan Skor</span></button><button class="nav" data-page="group">⚑ <span>Join Grup</span></button><button class="nav" data-page="story">❝ <span>Cerita</span></button><button class="nav" data-page="profile">⚙ <span>Pengaturan</span></button><button id="logoutBtn" class="nav-out hidden">⎋ Keluar</button><div class="side-note">MDA Universe<small>Simpan • Bagikan • Ceritakan</small></div></aside>
 <div class="main"><div class="app-top"><input id="topSearch" class="top-search" placeholder="Cari teman di MDA..."><div class="user-mini"><div id="avatar" class="avatar">M</div><div><b id="myName">Pemain</b><small id="myEmail"></small></div></div><span id="connection" class="muted conn"></span></div>
 <div class="content">
 <div id="page-home" class="page"><div class="banner"><h2>Selamat Datang di<br><span class="accent">MDA Universe!</span></h2><p>Halo, <b id="welcomeName">Pemain</b>. Tempat terbaik untuk menyimpan, berbagi, dan mengekspresikan diri.</p><button class="primary" data-go="games">Jelajahi Fitur →</button></div>
@@ -21,7 +21,7 @@
 <div class="panel"><h3>Game Ringan</h3><p class="muted">Puzzle, balapan, tebak angka, tic-tac-toe, dan memori.</p><button class="primary" data-go="games">Main Sekarang →</button></div>
 <div class="panel"><h3>Chat</h3><p class="muted">Ngobrol langsung dengan teman.</p><button class="secondary" data-go="chat">Buka Chat →</button></div>
 <div class="panel"><h3>Cerita Terbaru</h3><p class="muted">Belum ada cerita. Jadilah yang pertama berbagi.</p><button class="secondary" data-go="story">Baca Cerita →</button></div>
-<div class="panel"><h3>Grup &amp; Saluran</h3><p class="muted">Gabung ke komunitas kami.</p><button class="secondary" data-go="soon">Join Sekarang →</button></div>
+<div class="panel"><h3>Grup &amp; Saluran</h3><p class="muted">Gabung ke komunitas kami.</p><button class="secondary" data-go="group">Join Sekarang →</button></div>
 <div class="panel quote">"Bersama MDA, kita bisa lebih dekat, lebih berbagi, dan lebih bercerita."</div>
 </div>
 <div class="panel"><div class="section-head"><div><p class="eyebrow">DISCOVER</p><h3>Cari pemain</h3></div></div><div class="search-line"><input id="discoverSearch" placeholder="Cari username..."><button id="discoverBtn" class="primary">Cari</button></div><div id="discoverResults" class="result-list"></div></div>
@@ -50,7 +50,7 @@
 
         <div id="page-music" class="page hidden">
           <div class="page-heading"><p class="eyebrow">MDA MUSIC</p><h2>Musik</h2><p class="muted">Pilih file lagu dari HP, lalu putar.</p></div>
-          <div class="panel audio-box"><input id="musicFiles" type="file" accept="audio/*" multiple><audio id="player" controls></audio><div id="playlist" class="result-list"></div></div>
+          <div class="panel audio-box"><input id="musicFiles" type="file" accept="audio/*" multiple><audio id="player" controls></audio><div id="lyrics" class="lyrics"><small>Lirik akan tampil di sini saat lagu diputar.</small></div><div id="playlist" class="result-list"></div></div>
         </div>
 
         <div id="page-profile" class="page hidden">
@@ -62,6 +62,8 @@
 <div class="panel"><input id="stTitle" placeholder="Judul cerita" maxlength="100"><textarea id="stBody" rows="8" placeholder="Tulis ceritamu..."></textarea><div class="search-line"><button id="stSave" class="secondary">Simpan Draft</button><button id="stPub" class="primary">Publikasikan</button><button id="stNew" class="ghost">Baru</button></div><p id="stMsg" class="muted"></p></div>
 <div class="panel"><h3>Cerita Saya</h3><div id="stMine" class="result-list"></div></div>
 <div class="panel"><h3>Cerita Terbit</h3><div id="stAll" class="result-list"></div></div></div>
+<div id="page-group" class="page hidden"><div class="page-heading"><h2>Join Grup</h2><p class="muted">Gabung ke komunitas MDA Universe.</p></div><div class="grid two"><div class="panel feat"><div class="big">➤</div><h3>Saluran</h3><p class="muted">Dapatkan update terbaru di saluran WhatsApp.</p><a class="linkbtn" href="https://whatsapp.com/channel/0029VbDxZwU3LdQaig6Tzu13" target="_blank" rel="noopener">Join Sekarang →</a></div><div class="panel feat"><div class="big">♧</div><h3>Grup</h3><p class="muted">Ngobrol bareng di grup WhatsApp komunitas.</p><a class="linkbtn" href="https://chat.whatsapp.com/BwqXIGwnGAY7L3TSNgBPF6" target="_blank" rel="noopener">Join Sekarang →</a></div></div></div>
+<div id="page-board" class="page hidden"><div class="page-heading"><h2>Papan Skor</h2><p class="muted">Peringkat 10 besar tiap game.</p></div><div class="panel"><div id="boardTabs" class="board-tabs"></div><div id="boardList" class="result-list"></div></div></div>
 <div id="page-soon" class="page hidden"><div class="panel"><h2>Segera Hadir</h2><p class="muted">Fitur ini sedang disiapkan.</p></div></div>
 </div></div></section>
 <script type="module" src="app.js"></script></body></html>
