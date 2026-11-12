@@ -68,11 +68,11 @@ async function loadFriends(){
   $("incoming").querySelectorAll(".accept").forEach(b=>b.onclick=()=>acceptFriend(b.dataset.id));
   renderChatFriends();
 }
-function personHTML(p,sub,action=""){return `<div class="person"><div class="avatar">${escapeHTML(initials(p.username))}</div><div class="person-info"><b>${escapeHTML(p.username)}</b><small class="${sub==="Teman"?(onlineIds.has(p.id)?"on":"off"):""}">${escapeHTML(sub==="Teman"?(onlineIds.has(p.id)?"Online":"Offline"):sub)}</small></div>${action}</div>`;}
+function personHTML(p,sub,action=""){return `<div class="person" data-uid="${p.id}"><div class="avatar">${p.avatar_path?`<img class="av" src="${pubUrl(p.avatar_path)}">`:escapeHTML(initials(p.username))}</div><div class="person-info"><b>${escapeHTML(p.username)}</b><small class="${sub==="Teman"?(onlineIds.has(p.id)?"on":"off"):""}">${escapeHTML(sub==="Teman"?(onlineIds.has(p.id)?"Online":"Offline"):sub)}</small></div>${action}</div>`;}
 async function acceptFriend(id){const {error}=await supabase.from("friendships").update({status:"accepted"}).eq("requester",id).eq("addressee",currentUser.id);if(error)alert(error.message);else loadFriends();}
 $("discoverBtn").onclick=async()=>{
   const q=$("discoverSearch").value.trim();if(!q)return;
-  const {data,error}=await supabase.from("profiles").select("id,username,bio").ilike("username",`%${q}%`).neq("id",currentUser.id).limit(10);
+  const {data,error}=await supabase.from("profiles").select("id,username,bio,avatar_path").ilike("username",`%${q}%`).neq("id",currentUser.id).limit(10);
   if(error){$("discoverResults").textContent=error.message;return;}
   if(!data.length){$("discoverResults").innerHTML="<small>Pemain tidak ditemukan.</small>";return;}
   const {data:rels}=await supabase.from("friendships").select("*").or(`requester.eq.${currentUser.id},addressee.eq.${currentUser.id}`);
@@ -237,10 +237,53 @@ document.querySelector('.nav[data-page="profile"]').addEventListener("click",loa
 $("saveProfile").addEventListener("click",()=>setTimeout(loadBanner,1200));
 const viewed=new Set();
 async function loadFeed(){const {data,error}=await supabase.from("posts").select("*,profiles(username),post_likes(user_id),post_views(user_id),post_comments(id,body,author_id,created_at,profiles(username))").order("created_at",{ascending:false}).limit(30);if(error){$("pcMsg").textContent=error.message;return;}const L=data||[];
- $("feed").innerHTML=L.map(p=>{const liked=p.post_likes.some(l=>l.user_id===currentUser.id);return `<div class="panel post"><b>${escapeHTML(p.profiles?.username||"pemain")}</b> <small>${new Date(p.created_at).toLocaleString("id-ID")}</small><div class="pmedia">${mediaEl(pubUrl(p.media_path),p.media_type||"image/jpeg",true)}</div><p>${escapeHTML(p.caption||"")}</p><div class="search-line"><button class="${liked?"primary":"secondary"}" data-like="${p.id}">♥ ${p.post_likes.length}</button><span class="muted">${p.post_views.length} penonton</span>${p.author_id===currentUser.id?`<button class="ghost" data-del="${p.id}">Hapus</button>`:""}</div><div class="cm">${p.post_comments.map(c=>`<p><b>${escapeHTML(c.profiles?.username||"pemain")}</b> ${escapeHTML(c.body)}</p>`).join("")}</div><div class="search-line"><input data-ci="${p.id}" placeholder="Tulis komentar..." maxlength="500"><button class="secondary" data-cs="${p.id}">Kirim</button></div></div>`;}).join("")||"<small>Belum ada postingan.</small>";
+ $("feed").innerHTML=L.map(p=>{const liked=p.post_likes.some(l=>l.user_id===currentUser.id);return `<div class="panel post"><b class="plink" data-uid="${p.author_id}">${escapeHTML(p.profiles?.username||"pemain")}</b> <small>${new Date(p.created_at).toLocaleString("id-ID")}</small><div class="pmedia">${mediaEl(pubUrl(p.media_path),p.media_type||"image/jpeg",true)}</div><p>${escapeHTML(p.caption||"")}</p><div class="search-line"><button class="${liked?"primary":"secondary"}" data-like="${p.id}">♥ ${p.post_likes.length}</button><span class="muted">${p.post_views.length} penonton</span>${p.author_id===currentUser.id?`<button class="ghost" data-del="${p.id}">Hapus</button>`:""}</div><div class="cm">${p.post_comments.map(c=>`<p><b>${escapeHTML(c.profiles?.username||"pemain")}</b> ${escapeHTML(c.body)}</p>`).join("")}</div><div class="search-line"><input data-ci="${p.id}" placeholder="Tulis komentar..." maxlength="500"><button class="secondary" data-cs="${p.id}">Kirim</button></div></div>`;}).join("")||"<small>Belum ada postingan.</small>";
  $("feed").querySelectorAll("[data-like]").forEach(b=>b.onclick=async()=>{const id=+b.dataset.like,liked=L.find(x=>x.id===id).post_likes.some(l=>l.user_id===currentUser.id);if(liked)await supabase.from("post_likes").delete().eq("post_id",id).eq("user_id",currentUser.id);else await supabase.from("post_likes").insert({post_id:id,user_id:currentUser.id});loadFeed();});
  $("feed").querySelectorAll("[data-cs]").forEach(b=>b.onclick=async()=>{const id=+b.dataset.cs,body=$("feed").querySelector(`[data-ci="${id}"]`).value.trim();if(!body)return;const {error}=await supabase.from("post_comments").insert({post_id:id,author_id:currentUser.id,body});if(error)alert(error.message);else loadFeed();});
  $("feed").querySelectorAll("[data-del]").forEach(b=>b.onclick=async()=>{if(!confirm("Hapus postingan ini?"))return;const p=L.find(x=>x.id===+b.dataset.del);await supabase.from("posts").delete().eq("id",p.id);await supabase.storage.from(MEDIA).remove([p.media_path]);loadFeed();});
  for(const p of L){if(!viewed.has(p.id)&&!p.post_views.some(v=>v.user_id===currentUser.id)){viewed.add(p.id);supabase.from("post_views").insert({post_id:p.id,user_id:currentUser.id}).then(()=>{});}}}
 $("pcPost").onclick=async()=>{const f=$("pcFile").files[0];if(!f)return $("pcMsg").textContent="Pilih foto atau video dulu.";if(f.size>30*1024*1024)return $("pcMsg").textContent="Maksimal 30 MB.";$("pcMsg").textContent="Mengunggah...";try{const path=await uploadMedia(f,"post");const {error}=await supabase.from("posts").insert({author_id:currentUser.id,caption:$("pcCaption").value.trim(),media_path:path,media_type:f.type});if(error)throw error;$("pcFile").value="";$("pcCaption").value="";$("pcMsg").textContent="Terposting.";loadFeed();}catch(err){$("pcMsg").textContent=err.message;}};
 document.querySelector('.nav[data-page="posts"]').addEventListener("click",loadFeed);
+
+{
+const a=$("player");let shuf=false,rep=false;
+const fmt=s=>isFinite(s)?Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0"):"0:00";
+function sync(){const has=pl.length&&cur>=0;$("mini").classList.toggle("hidden",!has);if(!has)return;$("miniTitle").textContent=$("fullTitle").textContent=cleanName(pl[cur].name);$("miniPlay").textContent=$("fPlay").textContent=a.paused?"▶":"⏸";}
+const go=d=>{if(!pl.length)return;play(shuf?Math.floor(Math.random()*pl.length):(cur+d+pl.length)%pl.length);};
+const toggle=()=>{if(!pl.length)return;a.paused?a.play():a.pause();};
+$("miniPlay").onclick=$("fPlay").onclick=toggle;$("miniNext").onclick=$("fNext").onclick=()=>go(1);$("miniPrev").onclick=$("fPrev").onclick=()=>go(-1);
+$("miniInfo").onclick=()=>$("full").classList.remove("hidden");$("fullClose").onclick=()=>$("full").classList.add("hidden");
+$("fShuf").onclick=()=>{shuf=!shuf;$("fShuf").classList.toggle("on",shuf);};$("fRep").onclick=()=>{rep=!rep;$("fRep").classList.toggle("on",rep);};
+["play","pause","loadedmetadata","emptied"].forEach(ev=>a.addEventListener(ev,sync));
+a.addEventListener("timeupdate",()=>{$("seek").value=a.duration?a.currentTime/a.duration*1000:0;$("tCur").textContent=fmt(a.currentTime);$("tTot").textContent=fmt(a.duration);$("fullLine").textContent=$("lyrics").querySelector("p.now")?.textContent||"";});
+$("seek").oninput=()=>{if(a.duration)a.currentTime=$("seek").value/1000*a.duration;};
+a.onended=()=>{if(rep){a.currentTime=0;a.play();}else if(shuf)go(1);else if(cur+1<pl.length)play(cur+1);};
+}
+
+function paintAvatar(path){if(!path)return;for(const el of [$("avatar"),$("profileAvatar")])el.innerHTML=`<img class="av" src="${pubUrl(path)}">`;}
+let avDone=false;setInterval(()=>{if(currentUser&&profile&&!avDone){avDone=true;paintAvatar(profile.avatar_path);}},1500);
+function openCrop(file,ratio,outW){return new Promise(res=>{
+ const fr=$("cropFrame"),im=$("cropImg"),z=$("cropZoom"),url=URL.createObjectURL(file);let sc=1,base=1,ox=0,oy=0,d=null;
+ fr.style.aspectRatio=ratio;fr.style.maxWidth=ratio>=1?"100%":"260px";$("crop").classList.remove("hidden");
+ const clamp=()=>{const W=fr.clientWidth,H=fr.clientHeight,w=im.naturalWidth*base*sc,h=im.naturalHeight*base*sc;ox=Math.min(0,Math.max(W-w,ox));oy=Math.min(0,Math.max(H-h,oy));};
+ const draw=()=>{clamp();im.style.width=im.naturalWidth*base*sc+"px";im.style.height=im.naturalHeight*base*sc+"px";im.style.left=ox+"px";im.style.top=oy+"px";};
+ im.onload=()=>{const W=fr.clientWidth,H=fr.clientHeight;base=Math.max(W/im.naturalWidth,H/im.naturalHeight);z.value=1;sc=1;ox=(W-im.naturalWidth*base)/2;oy=(H-im.naturalHeight*base)/2;draw();};
+ z.oninput=()=>{const W=fr.clientWidth,H=fr.clientHeight,cx=(W/2-ox)/(base*sc),cy=(H/2-oy)/(base*sc);sc=+z.value;ox=W/2-cx*base*sc;oy=H/2-cy*base*sc;draw();};
+ fr.onpointerdown=e=>{d={x:e.clientX,y:e.clientY,ox,oy};fr.setPointerCapture(e.pointerId);};
+ fr.onpointermove=e=>{if(!d)return;ox=d.ox+e.clientX-d.x;oy=d.oy+e.clientY-d.y;draw();};
+ fr.onpointerup=()=>{d=null;};
+ const close=v=>{$("crop").classList.add("hidden");URL.revokeObjectURL(url);res(v);};
+ $("cropCancel").onclick=()=>close(null);
+ $("cropOk").onclick=()=>{const W=fr.clientWidth,H=fr.clientHeight,k=1/(base*sc),c=document.createElement("canvas");c.width=outW;c.height=Math.round(outW/ratio);c.getContext("2d").drawImage(im,-ox*k,-oy*k,W*k,H*k,0,0,c.width,c.height);c.toBlob(b=>close(b),"image/jpeg",.9);};
+ im.src=url;});}
+$("avatarFile").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;const b=await openCrop(f,1,512);if(!b)return;try{const path=await uploadMedia(new File([b],"avatar.jpg",{type:"image/jpeg"}),"avatar");const {error}=await supabase.from("profiles").update({avatar_path:path}).eq("id",currentUser.id);if(error)throw error;profile.avatar_path=path;paintAvatar(path);}catch(err){alert(err.message);}};
+$("bannerFile").onchange=async e=>{let f=e.target.files[0];e.target.value="";if(!f)return;if(f.size>30*1024*1024)return alert("Maksimal 30 MB.");if(f.type.startsWith("video/")&&await videoLen(f)>10)return alert("Video banner maksimal 10 detik.");if(f.type.startsWith("image/")){const b=await openCrop(f,3,1500);if(!b)return;f=new File([b],"banner.jpg",{type:"image/jpeg"});}try{const path=await uploadMedia(f,"banner");const {error}=await supabase.from("profiles").update({banner_path:path,banner_type:f.type}).eq("id",currentUser.id);if(error)throw error;loadBanner();}catch(err){alert(err.message);}};
+async function openProfile(uid){const {data:p}=await supabase.from("profiles").select("*").eq("id",uid).maybeSingle();if(!p)return;const me=uid===currentUser.id,on=me||onlineIds.has(uid);
+ $("pvName").textContent=p.username;$("pvStatus").textContent=" "+(on?"Online":"Offline");$("pvStatus").className=on?"on":"off";$("pvBio").textContent=p.bio||"Belum ada bio.";
+ $("pvBanner").innerHTML=p.banner_path?mediaEl(pubUrl(p.banner_path),p.banner_type||"image/jpeg",false):"<small>Belum ada banner</small>";
+ $("pvAv").innerHTML=p.avatar_path?`<img class="av" src="${pubUrl(p.avatar_path)}">`:escapeHTML(initials(p.username));
+ const {count}=await supabase.from("posts").select("id",{count:"exact",head:true}).eq("author_id",uid);
+ $("pvMeta").textContent="Bergabung "+new Date(p.created_at).toLocaleDateString("id-ID")+" | "+(count||0)+" postingan";
+ $("pvChat").classList.toggle("hidden",me);$("pvChat").onclick=()=>{$("pv").classList.add("hidden");document.querySelector('.nav[data-page="chat"]').click();};$("pv").classList.remove("hidden");}
+$("pvClose").onclick=()=>$("pv").classList.add("hidden");
+document.addEventListener("click",e=>{const r=e.target.closest(".person[data-uid],.plink[data-uid]");if(r&&!e.target.closest("button")&&!e.target.closest("a"))openProfile(r.dataset.uid);});

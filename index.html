@@ -55,7 +55,7 @@
 
         <div id="page-profile" class="page hidden">
           <div class="page-heading"><p class="eyebrow">IDENTITY</p><h2>Profil</h2><p class="muted">Atur informasi yang terlihat oleh pemain lain.</p></div><div id="profBanner" class="prof-banner"><small>Belum ada banner</small></div><div class="panel"><label>Banner profil (gambar, atau video maks 10 detik yang diulang terus)</label><input id="bannerFile" type="file" accept="image/*,video/*"><small id="nameInfo" class="muted"></small></div>
-          <div class="panel profile-form"><div class="profile-avatar" id="profileAvatar">M</div><label>Username</label><input id="profileUsername" maxlength="24"><label>Bio</label><textarea id="profileBio" maxlength="160" placeholder="Ceritakan sedikit tentang dirimu..."></textarea><button id="saveProfile" class="primary">Simpan profil</button><p id="profileMessage" class="message"></p></div>
+          <div class="panel profile-form"><div class="profile-avatar" id="profileAvatar">M</div><input id="avatarFile" type="file" accept="image/*"><label>Username</label><input id="profileUsername" maxlength="24"><label>Bio</label><textarea id="profileBio" maxlength="160" placeholder="Ceritakan sedikit tentang dirimu..."></textarea><button id="saveProfile" class="primary">Simpan profil</button><p id="profileMessage" class="message"></p></div>
         </div>
       
 <div id="page-story" class="page hidden"><div class="page-heading"><h2>Cerita</h2><p class="muted">Tulis, simpan sebagai draft, lanjutkan kapan saja, lalu publikasikan.</p></div>
@@ -68,5 +68,9 @@
 <div class="panel"><textarea id="pcCaption" rows="2" maxlength="500" placeholder="Tulis keterangan..."></textarea><div class="search-line"><input id="pcFile" type="file" accept="image/*,video/*"><button id="pcPost" class="primary">Posting</button></div><p id="pcMsg" class="muted"></p></div>
 <div id="feed"></div></div>
 <div id="page-soon" class="page hidden"><div class="panel"><h2>Segera Hadir</h2><p class="muted">Fitur ini sedang disiapkan.</p></div></div>
-</div></div></section>
+</div></div><div id="crop" class="crop hidden"><div class="crop-box"><div id="cropFrame" class="crop-frame"><img id="cropImg" alt=""></div><input id="cropZoom" type="range" min="1" max="4" step="0.01" value="1"><small class="muted">Geser gambar dan atur zoom sampai pas.</small><div class="search-line"><button id="cropCancel" class="ghost">Batal</button><button id="cropOk" class="primary">Gunakan</button></div></div></div>
+<div id="pv" class="crop hidden"><div class="crop-box"><div id="pvBanner" class="prof-banner"></div><div class="pv-head"><div id="pvAv" class="avatar big"></div><div><b id="pvName"></b><small id="pvStatus"></small></div></div><p id="pvBio" class="muted"></p><small id="pvMeta" class="muted"></small><div class="search-line"><button id="pvChat" class="primary">Buka Chat</button><button id="pvClose" class="ghost">Tutup</button></div></div></div>
+<div id="mini" class="mini hidden"><div id="miniInfo" class="mini-info"><div class="mini-cover">♪</div><div><b id="miniTitle">-</b><small>MDA Music</small></div></div><button id="miniPrev">⏮</button><button id="miniPlay">▶</button><button id="miniNext">⏭</button></div>
+<div id="full" class="full hidden"><button id="fullClose" class="ghost">⌄ Tutup</button><div class="full-cover">♪</div><h2 id="fullTitle">-</h2><p id="fullLine" class="muted"></p><input id="seek" type="range" min="0" max="1000" value="0"><div class="times"><small id="tCur">0:00</small><small id="tTot">0:00</small></div><div class="ctrls"><button id="fShuf" class="ghost">⇄</button><button id="fPrev" class="ghost">⏮</button><button id="fPlay" class="bigplay">▶</button><button id="fNext" class="ghost">⏭</button><button id="fRep" class="ghost">⟲</button></div></div>
+</section>
 <script type="module" src="app.js"></script></body></html>
